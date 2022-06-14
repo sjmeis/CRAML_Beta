@@ -155,8 +155,9 @@ def create_tab(i, x, name, disabled, INIT=None):
                             style={"padding-top":"1rem"})
 
     file_opt = html.Div(id="file-div-{}".format(i),
-                        children=[html.P("Extract field contains filename? ",
+                        children=[html.P("Extract field contains filename? ", id="filename-prompt",
                                     style={"display":"inline-block", "padding-left":"1rem"}),
+                                dbc.Tooltip("Select if text is contained in individual files and metadata records the filename.", target="filename-prompt", style={"font-size":"16px"}),
                                 daq.BooleanSwitch(id="file-{}-switch".format(i), 
                                     on=INIT['file_extract'],
                                     label="",
@@ -253,9 +254,11 @@ def get_layout(project):
     content = [dialog, upload, html.Hr(), loading, tabs, set_buttons, setup_div0, setup_div1]
 
     top = [html.H1("Setup"), html.H4("Please upload example input files"), html.Hr(),
-    html.Div(children=[html.Div(html.P(id="left-p", children="1 input file type\t"), style={"display":"inline-block", "padding":"1rem"}), 
+    html.Div(children=[html.Div(html.P(id="left-p", children="1 input file type\t"), style={"display":"inline-block", "padding":"1rem"}),
+            dbc.Tooltip("Metadata and data are contained in single files.", target="left-p", style={"font-size":"16px"}), 
             html.Div(daq.BooleanSwitch(id="setup-switch", on=False), style={"display":"inline-block"}),
-            html.Div(html.P(id="right-p", children="\t2 input file types"), style={"display":"inline-block", "padding":"1rem"})], 
+            html.Div(html.P(id="right-p", children="\t2 input file types"), style={"display":"inline-block", "padding":"1rem"}),
+            dbc.Tooltip("Metadata is located in separate files from the text data.", target="right-p", style={"font-size":"16px"})], 
             style={"display":"inline-block"})]
 
     layout = top + [html.Div(id="setup-content", children=content)]

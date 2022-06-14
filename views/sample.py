@@ -75,9 +75,11 @@ def get_layout(project):
 
     loading = dcc.Loading(id="sample-loading")
 
-    switch = html.Div(children=[html.Div(html.P(id="left-p-switch", children="Sample from single file (from setup)\t"), style={"display":"inline-block", "padding":"1rem"}), 
+    switch = html.Div(children=[html.Div(html.P(id="left-p-switch", children="Sample from single file (from setup)\t"), style={"display":"inline-block", "padding":"1rem"}),
+            dbc.Tooltip("Select to sample text from a single file (i.e. where the extract field contains filenames).", target="left-p-switch", style={"font-size":"16px"}), 
             html.Div(daq.BooleanSwitch(id="sample-switch", on=True), style={"display":"inline-block"}),
-            html.Div(html.P(id="right-p", children="\tSample from parent directory"), style={"display":"inline-block", "padding":"1rem"})], 
+            html.Div(html.P(id="right-p", children="\tSample from parent directory"), style={"display":"inline-block", "padding":"1rem"}),
+            dbc.Tooltip("Select to sample text from a parent directory containing all the text data files.", target="right-p", style={"font-size":"16px"})], 
             style={"display":"inline-block"})
 
     direct = dbc.Input(id="sample-dir", 
@@ -101,7 +103,7 @@ def get_layout(project):
     clear = dbc.Button("Clear", id="clear-button")
     buttons = html.Div(dbc.ButtonGroup([sample, clear], size="lg", className="me-1"), style={"width":"80%"})
 
-    layout = dialogs+[loading, html.H1("Sample"), html.H4("Create a sample for rules and training"), 
+    layout = dialogs+[loading, html.H1("Sample"), html.H4("Create a sample to build training data."), 
                 html.Hr(), switch, dir_browse, slider, buttons]
 
     return layout

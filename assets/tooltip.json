@@ -1,0 +1,26 @@
+{
+    "home": {
+        "name":"Home",
+        "tip":"Welcome! Hover to the Help button on any page to receive guidance and useful tips."
+    },
+    "project": {
+        "name":"Project",
+        "tip":"Projects organize your work and save your progress. Each project has its own settings, files, etc. Think of them as separate workspaces. Select an existing project, or choose New Project to begin. Files for each project are stored under the 'projects' in the main CRAML directory."
+    },
+    "setup": {
+        "name":"Setup",
+        "tip":"Setup is an important step prior to using CRAML. It is done once per project, but can be updated. Settings are saved in the project folder under 'settings.json'. Be sure to read the details and examples in the Github README."
+    },
+    "sample": {
+        "name":"Sample",
+        "tip":"Sampling follows conventional ML practice by selecting a representative sample of text data from the entire corpus. As all data is different, sample size will differ regarding the number of observations to build a representative sample for an effective classifier to be trained. Refer to the Github README for more."
+    },
+    "tags": {
+        "name": "Tags",
+        "tip": "Tags capture topics or themes and are defined by rules. Each tag requires keywords that will be extracted from text. The notion is to 'tag' text documents containing keywords with a binary (0/1) classification scheme."
+    },
+    "rules": {
+        "name": "Rules",
+        "tip": "Rules define how text documents containing keywords belong (or not) to tags. For each tag, a rule is defined and given priority. At the base level, all keywords are define as rules with a classification and priority of 0. Subsequent (higher) priorities will take precedence over previous rules. In other words, rules with higher priorities will 'overwrite' once with lower priorities, provided that the rules overlap. See the README for more details."
+    }
+}

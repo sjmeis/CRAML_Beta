@@ -32,6 +32,7 @@ from views import project, setup, sample, tags, rules, extract, validation, text
 ###################### GLOBAL DATA ###############################
 PATH = Path(__file__).parent
 NAME = "CRAML"
+LONG_NAME = "Context Rule-Assisted Machine Learning"
 LOG_STREAM = io.StringIO()
 q = queue.Queue()
 ####################################################################
@@ -405,7 +406,7 @@ def render_page_content(pathname, data, dc):
     if pathname == "/home" or pathname == "/":
         if pathname == "/home" and which == "project":
             logging.getLogger("messages").info("Home!")
-        layout = [html.H1("{} Homepage".format(NAME)), html.H3("Navigate the sidebar to begin!")]
+        layout = [html.H1("Homepage: {}".format(LONG_NAME)), html.H3("Navigate the sidebar to begin!")]
     elif pathname == "/project":
         if which != "project":
             logging.getLogger("messages").info("Navigated to Projects page.")

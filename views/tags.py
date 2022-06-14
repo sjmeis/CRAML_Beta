@@ -143,7 +143,7 @@ def get_layout(project):
     hidden_div3 = html.Div(id="hidden-div3", children=None, style={"display":"none"})
     current_tab = html.Div(id="hidden-cur-tab", children=None, style={"display":"none"})
     
-    layout = modals+[html.H1("Tags"), html.H4("What would you like to find out about your data?"),
+    layout = modals+[html.H1("Tags"), html.H4("Tags are binary classes that are defined to characterize your text."),
                 buttons, html.Hr(), tabs, table, key_buttons, loading, save_remind, autosave, hidden_div, hidden_div2, hidden_div3, current_tab]
 
     return layout

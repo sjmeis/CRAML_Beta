@@ -69,7 +69,7 @@ def get_layout(project):
                 style_cell={
                     'font_size': '16px',
                     'text_align': 'center',
-                    'maxWidth':'500px'
+                    'maxWidth':'300px'
                 },
                 fixed_rows={'headers': True},
                 style_table={'max_height': 700},
@@ -94,7 +94,7 @@ def get_layout(project):
 
     hidden_div = html.Div(id="es-hidden", style={"display":"none"})
 
-    layout = [interval, dialog, del_dialog, html.H1("Extraction"), html.H3("Time to test out your keywords + rules."),
+    layout = [interval, dialog, del_dialog, html.H1("Extraction"), html.H3("Time to test out your keywords (+ rules)."),
                 mode_switch, switch, n_input, es_button, html.Hr(), loading, loading2, table, hidden_div]
 
     return layout

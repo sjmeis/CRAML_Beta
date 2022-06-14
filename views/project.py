@@ -62,7 +62,7 @@ def get_layout():
                     style={"display":"inline-block"})
 
     layout = [new_modal, html.H1("Project"), 
-                html.H4("Please select a project to begin (or create a new one)."),
+                html.H4("Select a project to begin (or create a new one)."),
                 html.Hr(), body]
 
     return layout
