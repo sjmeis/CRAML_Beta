@@ -231,8 +231,8 @@ def get_options(project, FULL=False):
 
         if FULL == False and "FULL EXTRACT" in l['name']:
             continue
-        elif FULL == True and "SAMPLE EXTRACT" in l['name']:
-            continue
+        #elif FULL == True and "SAMPLE EXTRACT" in l['name']:
+        #    continue
 
         path = Path(project) / "csv" / l['pid']
         if path.is_dir():

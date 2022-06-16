@@ -117,7 +117,7 @@ sidebar = html.Div(
         html.P("Utilities"),
         dbc.Nav(
             [
-                dbc.NavLink("File Explorer", href="/file_browser/", active="exact", disabled=True),
+                dbc.NavLink("File Explorer", href="/file_explorer/", active="exact", disabled=True),
                 dbc.NavLink("PDF-To-Text", href="/pdf_to_text", active="exact", disabled=True),
                 dbc.NavLink("Metadata Maker", href="/metadata_maker", active="exact", disabled=True)
             ],
@@ -331,7 +331,7 @@ def render_page_content(pathname, data, dc):
                     html.P("Utilities"),
                     dbc.Nav(
                         [
-                            dbc.NavLink("File Explorer", href="/file_browser/", active="exact"),
+                            dbc.NavLink("File Explorer", href="/file_explorer/", active="exact"),
                             dbc.NavLink("PDF-To-Text", href="/pdf_to_text", active="exact"),
                             dbc.NavLink("Metadata Maker", href="/metadata_maker", active="exact")
                         ],
@@ -381,7 +381,7 @@ def render_page_content(pathname, data, dc):
                     html.P("Utilities"),
                     dbc.Nav(
                         [
-                            dbc.NavLink("File Explorer", href="/file_browser/", active="exact", disabled=True),
+                            dbc.NavLink("File Explorer", href="/file_explorer/", active="exact", disabled=True),
                             dbc.NavLink("PDF-To-Text", href="/pdf_to_text", active="exact", disabled=True),
                             dbc.NavLink("Metadata Maker", href="/metadata_maker", active="exact", disabled=True)
                         ],
@@ -461,10 +461,10 @@ def render_page_content(pathname, data, dc):
         time.sleep(1)
         shutdown_server()
         layout = [html.H1("Goodbye!"), html.H3("You can now exit the browser.")]
-    elif pathname.startswith("/file_browser/"):
+    elif pathname.startswith("/file_explorer/"):
         arg = pathname.split('/')[-1]
-        logging.getLogger("messages").info("Navigated to File Browser")
-        if arg == "file_browser" or arg == "":
+        logging.getLogger("messages").info("Navigated to File Explorer")
+        if arg == "file_explorer" or arg == "":
             layout = file_browser.get_layout(data['project'], None)
         else:
             layout = file_browser.get_layout(data['project'], arg)

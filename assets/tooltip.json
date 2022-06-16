@@ -1,7 +1,7 @@
 {
     "home": {
         "name":"Home",
-        "tip":"Welcome! Hover to the Help button on any page to receive guidance and useful tips."
+        "tip":"Welcome! Hover to the Help button on any page to receive guidance and useful tips. For more detailed help, always refer to the README."
     },
     "project": {
         "name":"Project",
@@ -22,5 +22,49 @@
     "rules": {
         "name": "Rules",
         "tip": "Rules define how text documents containing keywords belong (or not) to tags. For each tag, a rule is defined and given priority. At the base level, all keywords are define as rules with a classification and priority of 0. Subsequent (higher) priorities will take precedence over previous rules. In other words, rules with higher priorities will 'overwrite' once with lower priorities, provided that the rules overlap. See the README for more details."
+    },
+    "extract": {
+        "name": "Extract",
+        "tip": "Extract represents an important step in the CRAML process. Using your defined keywords, context windows from you text data are extracted and saved. If a Sample Extract is chosen, extraction takes place on a created sample. Full Extracts, on the other hand, goes one step further: on your full data, extract is performed, then your defined rules are extrapolated to create a complete structured dataset. Note that Full Extracts require keywords AND rules to defined (each tag should only appear in a rule file once)."
+    },
+    "text_ex": {
+        "name": "Context Exploration",
+        "tip": "Now that extraction is finished, Context Exploration aids you in investigating the content of the extracted chunks. First select a finished Extract job, then choose which tag's keywords to explore. Next, choose between word chunks or sentence chunks, as well as the context size of these. X represents the number of results to display, either by most frequent (Top-X) or a random sampling (Random-X)."
+    },
+    "validation": {
+        "name": "Validation",
+        "tip": "Validation is crucial to the iterative nature of CRAML. With results ready from Extract, you can now verify your keywords and rules by preparing a validation set. Choose a finished Extract job and a rule set to validate. You have the option to 'tune' the validation set -- choose the minimum number of times a extrapolated rule should show up. The Message Center will inform you of the minimum total number of instances required to satisfy the minimum instances per rule. Generate a new validation set, reload a previously  created one (with the same settings), export the table, or import results. Once all hand-coded labels are inputted, using the scoring function to generate a validation report with metrics."
+    },
+    "train_nb": {
+        "name": "Train (NB)",
+        "tip": "Train a Naive Bayes classifier. Select a Sample Extract result, a rules file, and choose your settings. After training is finished, click on the corresponding row to show the results of training. Naives Bayes may be particularly helpful for a quick, yet effective stress test of your current rule set(s)."
+    },
+    "train_rf": {
+        "name": "Train (RF)",
+        "tip": "Train a Random Forest Classifier. The process is similar to Train (NB), but with a few more optional parameters to tune. While a Random Forest usually takes longer to train, the performance can be expected to be better om average than Naive Bayes."
+    },
+    "dataset": {
+        "name": "Dataset Creation",
+        "tip": "Dataset Creation is the culmination of all the previous stages, where the output is your tailored, structured dataset. Simply choose which rules file(s) to include, the extrapolation options, save options (database or simple CSV), and then which classifier to use (one per tag). Let it run, and voila: dataset ready!"
+    },
+    "data_ex": {
+        "name": "Dataset Exploration",
+        "tip": "Dataset Exploration allows you to dive into your newly created dataset. Just select a completed Dataset Creation job and choose how many results to display (much like Context Exploration). You can repeat the process to get a fuller picture of your dataset."
+    },
+    "file_explorer": {
+        "name": "File Explorer",
+        "tip": "Use the File Explorer to browse and open the files produced from Extract jobs. Since this process can often produce a number of individual files, it may be helpful to use this utility to open the files in your preferred application."
+    },
+    "pdf_to_text": {
+        "name": "PDF-To-Text",
+        "tip": "The PDF-To-Text utility helps you convert PDF files to cleaned text files. Just input the directory where these files are located, and the utility will do the rest. Already have txt files and just want them cleaned? Select the corresponding options and PDF converion will be skipped. Processed files will be saved under the [PROJECT NAME]/data directory."
+    },
+    "metadata_maker": {
+        "name": "Metadata Maker",
+        "tip": "Metadata Maker is useful for creating metadata files for your collection of text documents. Most importantly, the utility will output a file which can be used in Setup, i.e. one that maps each document to a unique ID. Choose a name for your file, and then select the parent directory (i.e. the 'data' directory with cleaned text files) which contains all the text files you would like to include in the metadata file."
+    },
+    "dc_login": {
+        "name": "DocumentCloud Login",
+        "tip": "[BETA] Login to your DocumentCloud account. The login will be valid for your entire CRAML session, until the tool is exited. "
     }
 }

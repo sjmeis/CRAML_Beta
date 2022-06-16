@@ -37,7 +37,7 @@ def get_layout(project):
 
     mode_switch = html.Div(children=[html.Div(html.P(children="Extract Sample \t"), style={"display":"inline-block", "padding-right":"1rem"}), 
                 html.Div(daq.BooleanSwitch(id="es-mode-switch", on=False), style={"display":"inline-block"}),
-                html.Div(html.P(children="\t Full Dataset Extraction"), style={"display":"inline-block", "padding":"1rem"})], 
+                html.Div(html.P(children="\t Full Dataset Extraction + Extrapolation"), style={"display":"inline-block", "padding":"1rem"})], 
                 style={"padding":"1rem"})
 
     switch = html.Div(children=[html.Div(html.P(id="left-p-es", children="Word Chunks \t"), style={"display":"inline-block", "padding-right":"1rem"}), 
@@ -169,7 +169,7 @@ def refresh(n, c, data):
     return_rows = []
     for n in new_rows:
         if n['status'] == "Finished":
-            n['status'] = "[{}]({})".format(n['status'], "/file_browser/{}".format(n['pid']))
+            n['status'] = "[{}]({})".format(n['status'], "/file_explorer/{}".format(n['pid']))
             if "FULL EXTRACT" not in n['name']:
                 n['pid'] = "[{}]({})".format(n['pid'], "/text_ex/{}".format(n['pid']))
             else:
