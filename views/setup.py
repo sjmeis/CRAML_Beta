@@ -60,8 +60,11 @@ def check_xml(data):
 def check_csv(decoded):
     line = io.StringIO(decoded.decode('utf-8')).readline()
 
-    dialect = csv.Sniffer().sniff(line)
-    delim = dialect.delimiter
+    #dialect = csv.Sniffer().sniff(line)
+    #delim = dialect.delimiter
+    #if delim == '|':
+    #    delim = ','
+    delim = ',' # enforce comma delimiter
 
     columns = [x.strip() for x in line.split(delim)]
 
@@ -83,7 +86,7 @@ def create_tab(i, x, name, disabled, INIT=None):
         INIT = {"parent":None, "id":None, "ext":None, 
                 "extract":None, "file_extract":None, "file_extract_dir":None}
 
-    direct = html.Div([html.Div(html.P("Parent directory for this data: "), 
+    direct = html.Div(id="tab-{}-direct-div", children=[html.Div(html.P("Parent directory for this data: "), 
                                         style={"display":"inline-block", "padding-right":"1rem"}),
                                 html.Div(dbc.Input(id="tab-{}-dir".format(i), 
                                                     placeholder="Input (relative) parent directory.",
@@ -93,9 +96,9 @@ def create_tab(i, x, name, disabled, INIT=None):
                                 style={"display":"inline-block"})],
                                 style={"display":"inline-block"})
 
-    browse = html.Div(dbc.Button("Browse", id="setup-data-dir-browse-{}".format(i)), style={"display":"inline-block"})
+    browse = html.Div(id="tab-{}-direct-div2", children=dbc.Button("Browse", id="setup-data-dir-browse-{}".format(i)), style={"display":"inline-block"})
 
-    extension = html.Div([html.Div(html.P("Input file type: "), 
+    extension = html.Div(id="tab-{}-direct-div3", children=[html.Div(html.P("Input file type: "), 
                                     style={"display":"inline-block", "padding-left":"1rem"}),
                             html.Div(dcc.Dropdown(id="ext-{}-drop".format(i), 
                                                 searchable=False,
@@ -190,11 +193,11 @@ def create_tab(i, x, name, disabled, INIT=None):
 
     if disabled == True:
         temp = dcc.Tab(id="tab-{}".format(i), label=None,
-                    children=[direct, browse, extension, file_table, all_button, drop, ext_drop, file_opt, file_dir,
+                    children=[html.Hr(), direct, browse, extension, file_table, all_button, drop, ext_drop, file_opt, file_dir,
                                 all_switch, check], disabled=disabled, style={"display": "none"})
     else:
         temp = dcc.Tab(id="tab-{}".format(i), label=name, style=tab_style, selected_style=tab_selected_style,
-                    children=[direct, browse, extension, file_table, all_button, drop, ext_drop, file_opt, file_dir,
+                    children=[html.Hr(), direct, browse, extension, file_table, all_button, drop, ext_drop, file_opt, file_dir,
                             html.Hr(),html.H6("Fields to keep:"), all_switch, check])
     return temp
 
@@ -253,15 +256,14 @@ def get_layout(project):
 
     content = [dialog, upload, html.Hr(), loading, tabs, set_buttons, setup_div0, setup_div1]
 
-    top = [html.H1("Setup"), html.H4("Please upload example input files"), html.Hr(),
-    html.Div(children=[html.Div(html.P(id="left-p", children="1 input file type\t"), style={"display":"inline-block", "padding":"1rem"}),
+    top = html.Div(id="top-div", children=[html.Div(children=[html.Div(html.P(id="left-p", children="1 input file type\t"), style={"display":"inline-block", "padding":"1rem"}),
             dbc.Tooltip("Metadata and data are contained in single files.", target="left-p", style={"font-size":"16px"}), 
             html.Div(daq.BooleanSwitch(id="setup-switch", on=False), style={"display":"inline-block"}),
             html.Div(html.P(id="right-p", children="\t2 input file types"), style={"display":"inline-block", "padding":"1rem"}),
             dbc.Tooltip("Metadata is located in separate files from the text data.", target="right-p", style={"font-size":"16px"})], 
-            style={"display":"inline-block"})]
+            style={"display":"inline-block"})])
 
-    layout = top + [html.Div(id="setup-content", children=content)]
+    layout = [html.H1("Setup"), html.H4("Please upload example input files"), html.Hr()] + [top, html.Div(id="setup-content", children=content)]
 
     return layout
 
@@ -475,7 +477,8 @@ def update_output(contents, n, filenames, data):
                         SETUP[name]["delim"] = delim
             else:
                 logging.getLogger("messages").info("File uploading...")
-                _, content_string = contents.split(',')
+                #_, content_string = contents.split(',')
+                content_string = ','.join(contents.split(',')[1:])
 
                 #name = os.path.splitext(filenames)[0]
                 name = "{}_0".format(data['project'].split('/')[-1])
