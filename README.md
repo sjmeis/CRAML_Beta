@@ -1,8 +1,49 @@
 # CRAML: Context Rule-Assisted Machine Learning #
-Welcome to CRAML Beta Version 0.4! CRAML is a novel text classification and dataset creation framework that harmonizes expert domain-level knowledge with the power of Machine Learning, in order to create meaningful datasets from raw data.
+
+Welcome to CRAML Beta Version 0.4! 
+
+CRAML is a novel text classification and dataset creation framework that harmonizes expert domain-level knowledge with the power of Machine Learning, in order to create meaningful datasets from raw data.
 
 ## What is it?! ##
- Do you have raw, unstructured text data and wish to create labeled datasets for downstream tasks? Then CRAML is right for you! Tackling the persistent problem of manually painstaking and resource intensive process of annotating large amounts of data, CRAML introduces a hybrid process that still leverages the speed and predictive power of Machine Learning methods, while resting upon the foundation of manually verified context rules. This can all be done in one single UI, which takes you from the raw data (which you provide) to a **clean, structured, codified dataset**. Pretty neat.
+
+ Do you have raw, unstructured text data and wish to create labeled datasets for downstream tasks?  The goal of CRAML is to take `txt`, `csv`, `xml`, and other text inputs, and output a unified and labeled dataset characterizing the contents of the text.
+ 
+ CRAML provides software tools to tackle the painstaking and resource intensive process of annotating large amounts of text data. Specific features include:
+
+  - sample: sample documents in a corpus to reduce the volume of text and enable work in low-resource environments.
+  - extract: extract only the relevant text ``chunks'' to further reduce the volume of text with keyword-based text extraction. 
+  - explore: detect frequently occuring word patterns from the extracted text
+  - tag: create ``tags'' to characterize the text
+  - rules: create ``rules'' to define each tag 
+  - extrapolate: project the rules on to the chunks extracted from the sample or the corpus, creating a training dataset with your tags
+  - validate: inspect the performance of the rules you create on a strategic sample
+  - train: train a machine learning model on the training dataset your rules create.
+
+ Tackling the painstaking and resource intensive process of annotating large amounts of data, CRAML introduces a hybrid method that leverages the speed and predictive power of Machine Learning methods, while resting upon the foundation of manually verified context rules. This can all be done in one single UI, which takes you from the raw data (which you provide) to a **clean, structured, codified dataset**. 
+ 
+At each stage, you interact with the data and ``steer learning'' to ensure that the output conforms to your understanding of the text. Pretty neat.
+
+## Background
+
+A [draft working paper introducing CRAML is now available](https://www.petenorlander.com/wp-content/uploads/2022/08/CRAML_most_recent.pdf). We welcome comments.
+
+## Acknowledgements
+
+CRAML was developed by Stephen Meisenbacher and Peter Norlander. 
+
+The authors wish to acknowledge the generous support of Loyola University Chicago, the Quinlan School of Business, the Loyola Rule of Law Institute, and the Economic Security Project.
+
+## License
+
+This work is licensed under a
+[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License][cc-by-nc-sa].
+
+[![CC BY-NC-SA 4.0][cc-by-nc-sa-image]][cc-by-nc-sa]
+
+[cc-by-nc-sa]: http://creativecommons.org/licenses/by-nc-sa/4.0/
+[cc-by-nc-sa-image]: https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png
+
+# Getting Started 
 
 ## Prerequisites ##
 There's not much you need to begin, but here's a few things:  
@@ -16,12 +57,13 @@ There's not much you need to begin, but here's a few things:
  And then you're good to go!
 
 ## Starting Up ##
-The only important step to complete before firing up CRAML is to take note of the format and location of your input data. For CRAML, two basic input types are in play:  
+
+The most important step to complete before firing up CRAML is to take note of the format and location of your input data. For CRAML, two basic input types are in play:  
 
 1. **Text Data**: these are the files that contain the *text* field to be extracted and processed. Of course, these files can also contain other fields, which can be included later on. The text is most important, as the context rules are created from here.  
 2. **Meta-Data**: this type of input is optional, in the case that metadata is contained in separate files outside of those included with the text data. 
 
-Both input types should already be "semi-structured", i.e. contained in `csv` or `xml` format, ideally with a unique identifier field. The goal is now to take these inputs, and output a unified and labeled dataset.
+Both input types should already be "semi-structured", i.e. contained in `csv` or `xml` format, ideally with a unique identifier field.
 
 With these in hand, all you need to do is run: `CRAML_Tool.py`. This will open the CRAML UI in your default browser as a locally-hosted web application. Note that you must run the file from its original location. As an alternative for Windows users, navigate to the `CRAML_Tool` directory and try out **CRAML_Tool.exe**.
 
@@ -35,7 +77,9 @@ Self-explanatory: start here!
 The CRAML UI allows for the user to carry out multiple projects at once. Each project contains its own files, rules, classifiers, etc. This can be useful if you have multiple data corpora you would like to work with. In this tab, select which project you're going to be working on, or create a new one!
 
 ### Setup ###
-The Setup stage is important to setting the parameters of your project. The page will prompt you to select one or two input types, i.e. if you only have **Text Data** files, or if you also have separate **Meta-Data** files. You can then upload "example" files for each of these (does not matter which, just choose the *prototypical* file for each input type). Upon doing this, you choose which fields to keep, which field is the unique identifier, and most importantly: which field is the *text* field to be extracted and processed. Note that **one and only one** field can be this *text* field - otherwise things would just get confusing! 
+The Setup stage is important to setting the parameters of your project. The page will prompt you to select one or two input types, i.e. if you only have **Text Data** files, or if you also have separate **Meta-Data** files. You can then upload "example" files for each of these (does not matter which, just choose the *prototypical* file for each input type). Upon doing this, you choose which fields to keep, which field is the unique identifier, and most importantly: which field is the *text* field to be extracted and processed. 
+
+Note that **one and only one** field can be this *text* field - otherwise things would just get confusing.
 
 A few notes to the several options available to you:
 
@@ -43,7 +87,7 @@ A few notes to the several options available to you:
 *  **File Explorer**:  once you input the path and file type, a list of file will automatically show up - this is simply all of the files in that directory matching the specified file type. Select which ones of these you will need (that have the text data), or `SELECT ALL`. 
 *  **ID, Extract Fields**: two dropdowns are presented next. The ID fields is mandatory: each input type (at least 1, maximum 2) should have an ID field, which uniquely indicates rows. If using two input file types, the IDs must not have the same name, but must "match up".
 *  **File Extraction -- IMPORTANT!**: if the indicated *Extract* field (which field is your text data) is not actually present in the file itself, but rather is filename pointing to the actual text file, flip the provided switch. If you do so, next you must provide the relative path to where these text files are located.
-*  **Fields to keep**: this is up to you! Of course, you will need at least an identifier field, as well as one text field for extraction. As you click or unclick these fields, the options for the two dropdowns above will dynamically change. 
+*  **Fields to keep**: At a minimum, you will need an identifier field with a unique ID for each row, as well as one text field for extraction. As you click or unclick these fields, the options for the two dropdowns above will dynamically change. 
 
 When you're satisfied with the setup, click `Save`. You can always come back later and modify the setup.
 
@@ -156,13 +200,17 @@ In the case where you already have text files but would like to clean the text, 
 If you remember from the **Setup** page, each document to be analyzed via CRAML needs to be uniquely identified, essentially so that the resulting dataset in the end can have a ID column. If just have a collection of text documents with no pre-existing metadata, this identifier might no exist. To help solve this, the **Metadata Maker** tool will map uniquely generated IDs to all documents in your project, thus creating the necessary file to be indicated in the **Setup** process. This is most helpful when you have many "unstructured" documents (such as those converted in the **PDF-To-Text** utility). The result of using this utility will then be a simple file with an ID column, which is mapped to the filenames.
 
 ## DocumentCloud (Beta) ##
-Curreently in development is a DocumentCloud Add-In which will allow users to integrate their DocumentCloud accounts with the CRAML interface. [DocumentCloud](https://www.documentcloud.org/home) is an:
+Currently in development is a DocumentCloud Add-In which will allow users to integrate their DocumentCloud accounts with the CRAML interface. [DocumentCloud](https://www.documentcloud.org/home) is an:
 
 > ...all-in-one platform for documents: upload, organize, analyze, annotate, search, and embed.
 
-Most importantly, is serves as a repository for millions of publicly available documents, making it a perfect place to source your data for CRAML. 
+Most importantly, is serves as a repository for millions of publicly available documents accessed by journalists and academics, and is where we plan to host data for an early use of CRAML. 
 
 Future functionality will include importing and annotating DocumentCloud documents. With these users can create structured datasets from any number of available documents on the platform. Stay tuned.
+
+### Future Add-ins
+
+We  encourage other developers to build their own add-ins to incorporate new streams of internet text.
 
 ## Get CRAMLing! ##
 We hope that this brief guide will allow you to begin your CRAML journey. Should questions, comments, or bugs arise, please feel free to reach out. Stay tuned for updates and improvements!
