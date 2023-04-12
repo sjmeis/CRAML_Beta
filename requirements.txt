@@ -18,3 +18,5 @@ seaborn
 documentcloud
 diskcache
 pandarallel
+num2words
+sentence_transformers

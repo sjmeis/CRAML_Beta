@@ -137,7 +137,7 @@ def fill_table(n, contents, n2, dir, value, X, xmin, ins_min, data):
         logging.getLogger("messages").error("No rules selected!")
         raise PreventUpdate
 
-    parent = Path(data['project']) / "csv" / dir
+    parent = Path(data['project']) / "csv" / dir        
     rules = Path(data['project']) / "rules" / "{}.csv".format(value)
     name = "{}_val_{}_{}".format(rules.stem, X, dir)
 

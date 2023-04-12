@@ -10,6 +10,8 @@ import pandas as pd
 import logging
 import platform
 import subprocess
+import pymongo
+from pymongo.errors import ConnectionFailure
 
 import zlib
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
@@ -282,3 +284,13 @@ def p_encode(p):
     return b64e(zlib.compress(p.encode(), 9)).decode()
 def p_decode(b):
     return zlib.decompress(b64d(b.encode())).decode()
+
+def get_mongo_client():
+    client = pymongo.MongoClient()
+    try:
+        client.admin.command('ping')
+        return client
+    except ConnectionFailure:
+        print("Server not available")
+        logging.getLogger("messages").error("No mongo database found! Is the server running?")
+        return None

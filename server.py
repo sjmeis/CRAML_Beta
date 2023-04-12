@@ -6,7 +6,7 @@ from pathlib import Path
 import dash
 import dash_bootstrap_components as dbc
 
-VERSION = "Beta v0.4"
+VERSION = "Beta v0.5"
 
 #external_stylesheets=["https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
 #                        dbc.themes.BOOTSTRAP, "assets/style.css"]

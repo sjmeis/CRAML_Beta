@@ -52,8 +52,58 @@ def get_layout(project):
                     value=6,
                     label='N',
                     labelPosition='bottom',
-                    style={"display":"inline-block"})], 
+                    style={"display":"inline-block"}),
+                    dbc.Tooltip(
+                        "N denotes the number of tokens to be kept on each side of the keyword.",
+                        target="es-n",
+                        style={"display":"inline-block"}
+                    )], 
                 style={"display":"inline-block", "padding":"1rem"})
+
+    num_switch = html.Div(children=[html.Div(html.P(children="Keep numbers? \t"), style={"display":"inline-block", "padding-right":"1rem"}), 
+                html.Div(daq.BooleanSwitch(id="num-switch", on=False), style={"display":"inline-block"}),
+                dbc.Tooltip(
+                    "Do you want to keep numbers (digits) when extracting text? These will be converted to word format (42 -> forty-two).",
+                    target="num-switch",
+                    style={"display":"inline-block"}
+                ),
+                ],
+                style={"display":"inline-block", "padding":"1rem"})
+    
+    embed_switch = html.Div(html.Div(children=[
+                html.Div(html.P(id="left-p-embed", children="Text Matching \t"), style={"display":"inline-block", "padding-right":"1rem"}),
+                dbc.Tooltip(
+                    "Rules will be matched directly.",
+                    target="left-p-embed",
+                    style={"display":"inline-block"}
+                ),
+                html.Div(daq.BooleanSwitch(id="embed-switch", on=False), style={"display":"inline-block"}),
+                html.Div(html.P(id="right-p-embed", children="\t Embedding Matching"), style={"display":"inline-block", "padding":"1rem"}),
+                dbc.Tooltip(
+                    "Rules will be matched based upon embedding similarity.",
+                    target="right-p-embed",
+                    style={"display":"inline-block"}
+                ),
+                html.Div(children=[
+                    dbc.Label(id="thres-label", children="Threshold", style={"display":"none"}),
+                    dbc.Input(
+                        id='es-embed-threshold',
+                        type='number',
+                        min=0,
+                        max=1,
+                        step=0.05,
+                        value=0.6,
+                        maxlength='4',
+                        style={"display":"none"}
+                    ),
+                    dbc.Tooltip(
+                            "The similarity threshold: only matches above this threshold will be kept.",
+                            target="es-embed-threshold",
+                            style={"display":"inline-block"}
+                    ) 
+                ], style={"display":"inline-block", "padding":"1rem"})
+                ], 
+                style={"display":"inline-block", "padding":"1rem"}))
 
     es_button = html.Div(dbc.Button("Extract!", id="es-button", size="lg"))
 
@@ -90,18 +140,18 @@ def get_layout(project):
     loading = dcc.Loading(id="es-loading")
     loading2 = dcc.Loading(id="es-loading-opt")
 
-    interval = dcc.Interval(id="table-refresh", interval=3000)
+    interval = dcc.Interval(id="table-refresh", interval=2000)
 
     hidden_div = html.Div(id="es-hidden", style={"display":"none"})
 
     layout = [interval, dialog, del_dialog, html.H1("Extraction"), html.H3("Time to test out your keywords (+ rules)."),
-                mode_switch, switch, n_input, es_button, html.Hr(), loading, loading2, table, hidden_div]
+                mode_switch, switch, n_input, num_switch, embed_switch, es_button, html.Hr(), loading, loading2, table, hidden_div]
 
     return layout
 
 q = Queue()
 
-def start_proc(e, name, n, mode, q, CLASS, project, basename, id):
+def start_proc(e, name, n, mode, q, CLASS, project, basename, id, EMBED, THRESHOLD, keywords):
     pid = str(os.getpid())
     e.set_path(pid)
     os.makedirs(e.get_path())
@@ -110,7 +160,7 @@ def start_proc(e, name, n, mode, q, CLASS, project, basename, id):
     extracted = e.extract()
     if CLASS == True:
         rules = get_rules(project)
-        extra = Extrapolate(pid, basename, extracted, rules, project, id)
+        extra = Extrapolate(pid, basename, extracted, rules, project, id, EMBED=EMBED, THRESHOLD=THRESHOLD, KEYWORDS=keywords)
         saved = extra.extrapolate()
         logging.getLogger("messages").info("Extrapolation complete: saved to {}".format(saved.as_posix()))
     q.put([pid])
@@ -139,14 +189,14 @@ def refresh(n, c, data):
             new_data = {"pid":new[0], "name":new[1], "start":new[2].strftime("%m/%d/%Y, %H:%M:%S"), 
                         "elapsed": get_duration(new[2]), "status":"Running!", "n":new[3], "mode":new[4]}
             rows.append(new_data)
-            logging.getLogger("messages").info("Extract Sample process {} ({}) started.".format(new_data['pid'], new_data['name']))
+            logging.getLogger("messages").info("Extract process {} ({}) started.".format(new_data['pid'], new_data['name']))
         else:
             to_del = new[0]
             for i, r in enumerate(rows):
                 if r['pid'] == to_del:
                     r['elapsed'] = get_duration(datetime.strptime(r['start'], "%m/%d/%Y, %H:%M:%S"))
                     r['status'] = "Finished"
-                    logging.getLogger("messages").critical("Extract Sample process {} ({}) finished!".format(r['pid'], r['name']))
+                    logging.getLogger("messages").critical("Extract process {} ({}) finished!".format(r['pid'], r['name']))
                     to_del = (i, r)
                     break
             rows[to_del[0]] = to_del[1]
@@ -182,8 +232,10 @@ def refresh(n, c, data):
 @app.callback(Output("es-dialog", "displayed"),
                 Input("es-button", "n_clicks"),
                 [State("es-mode-switch", "on"), State("es-switch", "on"), 
-                State("es-n", "value"), State("project", "data")])
-def do_es(n, mode, switch, n_input, data):
+                State("es-n", "value"), State("num-switch", "on"),
+                State("embed-switch", "on"), State("es-embed-threshold", "value"),
+                State("project", "data")])
+def do_es(n, mode, switch, n_input, keep_num, embed, threshold, data):
     global q
 
     if n is None:
@@ -194,11 +246,24 @@ def do_es(n, mode, switch, n_input, data):
         logging.getLogger("messages").error("No settings found. Please visit the setup tab first.")
         return False
 
+    db = False
+    for x in settings:
+        if "db" in settings[x]:
+            db = True
+            db_name = "{}/{}".format(settings[x]['db'], settings[x]['collection'])
+
     keywords = get_keywords(data['project'])
     all_keys = []
     for k in keywords.keys():
         all_keys.extend(keywords[k])
     all_keys = list(set(all_keys))
+
+    if embed == True:
+        EMBED = True
+        THRESHOLD = threshold
+    else:
+        EMBED = False
+        THRESHOLD = None
 
     for k in settings.keys():
         if settings[k]['extract'] != "None":
@@ -207,23 +272,62 @@ def do_es(n, mode, switch, n_input, data):
             else:
                 MODE = "sentence"
 
+            if keep_num == False:
+                KEEP_NUM = False
+            else:
+                KEEP_NUM = True
+
+            settings[k]["embed"] = EMBED
+            settings[k]["embed_threshold"] = THRESHOLD
+
             if mode == False:
-                name = "[SAMPLE EXTRACT] parent: {} ({}), fields: {}, extract: {}, mode: {} (n={})".format(settings[k]["parent"], \
-                    settings[k]["ext"], len(settings[k]["fields"]), settings[k]["extract"], MODE, n_input)
-                ext_list = [x for x in (Path(data['project']) / "sample").rglob("*{}".format(settings[k]['ext']))]
+                if db == True:
+                    ext_list = [x for x in (Path(data['project']) / "sample").rglob("*.csv")]
+                    name_ext = "db"
+                    name_parent = db_name
+                    file_ext = False
+                    settings[k]['delim'] = ','
+                else:
+                    ext_list = [x for x in (Path(data['project']) / "sample").rglob("*{}".format(settings[k]['ext']))]
+                    name_ext = settings[k]['ext']
+                    name_parent = settings[k]["parent"]
+                    file_ext = settings[k]['file_extract']
+                
+                if EMBED == True:
+                    name = "[SAMPLE EXTRACT (EMBED, {})] parent: {} ({}), fields: {}, extract: {}, mode: {} (n={})".format(THRESHOLD, name_parent, \
+                        name_ext, len(settings[k]["fields"]), settings[k]["extract"], MODE, n_input)
+                else:
+                    name = "[SAMPLE EXTRACT] parent: {} ({}), fields: {}, extract: {}, mode: {} (n={})".format(name_parent, \
+                        name_ext, len(settings[k]["fields"]), settings[k]["extract"], MODE, n_input)
+                
                 e = Extract(ext_list=ext_list, csv_dir=(Path(data['project']) / "csv"), 
                             n=n_input, fields=settings[k]["fields"], KEYS=all_keys, SETTINGS=settings, MODE=MODE,
-                            FILE_EXT=settings[k]['file_extract'])
-                p = Process(target=start_proc, args=(e, name, n_input, MODE, q, False, data['project'], k, settings[k]['id']))
+                            FILE_EXT=file_ext, KEEP_NUM=KEEP_NUM)
+                p = Process(target=start_proc, args=(e, name, n_input, MODE, q, False, data['project'], k, settings[k]['id'], EMBED, THRESHOLD, keywords))
 
             else:
-                name = "[FULL EXTRACT] parent: {} ({}), fields: {}, extract: {}, mode: {} (n={})".format(settings[k]["parent"], \
-                    settings[k]["ext"], len(settings[k]["fields"]), settings[k]["extract"], MODE, n_input)
-                ext_list = [Path(x) for x in settings[k]['files']]
+                if db == True:
+                    ext_list = None
+                    name_ext = "db"
+                    name_parent = db_name
+                    file_ext = False
+                else:
+                    ext_list = [Path(x) for x in settings[k]['files']]
+                    name_ext = settings[k]['ext']
+                    name_parent = settings[k]["parent"]
+                    file_ext = settings[k]['file_extract']
+
+                if EMBED == True:
+                    name = "[FULL EXTRACT (EMBED, {})] parent: {} ({}), fields: {}, extract: {}, mode: {} (n={})".format(THRESHOLD, name_parent, \
+                        name_ext, len(settings[k]["fields"]), settings[k]["extract"], MODE, n_input)
+                else:
+                    name = "[FULL EXTRACT] parent: {} ({}), fields: {}, extract: {}, mode: {} (n={})".format(name_parent, \
+                        name_ext, len(settings[k]["fields"]), settings[k]["extract"], MODE, n_input)
+
                 e = Extract(ext_list=ext_list, csv_dir=(Path(data['project']) / "csv"), 
                             n=n_input, fields=settings[k]["fields"], KEYS=all_keys, SETTINGS=settings, MODE=MODE,
-                            FILE_EXT=settings[k]['file_extract'])
-                p = Process(target=start_proc, args=(e, name, n_input, MODE, q, True, data['project'], k, settings[k]['id']))
+                            FILE_EXT=file_ext)
+                p = Process(target=start_proc, args=(e, name, n_input, MODE, q, True, data['project'], k, settings[k]['id'], EMBED, THRESHOLD, keywords))
 
             p.start()
 
@@ -300,6 +404,15 @@ def inform_update(on, on2, n):
         else:
             logging.getLogger("messages").info("Option update: extracting sentence chunks of context size {}".format(n))
     else:
-        logging.getLogger("messages").info("Option update: context size changed to {}".format(n))
+        #logging.getLogger("messages").info("Option update: context size changed to {}".format(n))
+        raise PreventUpdate
 
     return " "
+
+@app.callback([Output("es-embed-threshold", "style"), Output("thres-label", "style")],
+                Input("embed-switch", "on"))
+def show_threshold(on):
+    if on == False:
+        return {"display":"none"}, {"display":"none"}
+    else:
+        return {"display":"inline-block"}, {"display":"inline-block"}

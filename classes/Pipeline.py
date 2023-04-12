@@ -14,6 +14,7 @@ from datetime import datetime
 import sqlite3
 from Extract import Extract
 import multiprocessing as mp
+from multiprocessing.pool import ThreadPool
 from contextlib import closing
 from functools import partial
 import json
@@ -115,7 +116,7 @@ def _class_helper_(classifier, keys, texts):
 
     class_func = partial(classify, keys, classifier) 
     #with closing(mp.Pool(NUM_PROC, init_pool(classifier['clf']))) as pool:
-    with closing(mp.Pool(NUM_PROC)) as pool:
+    with closing(ThreadPool(NUM_PROC)) as pool:
         res = pool.map(class_func, texts)
         pool.close()
         pool.join()
@@ -181,7 +182,8 @@ class Pipeline:
             #self.create_mapping()
         else:
             self.main_dir = None
-        self.data_dir = Path(SETTINGS['data_dir'])
+        if SETTINGS['data_dir'] is not None:
+            self.data_dir = Path(SETTINGS['data_dir'])
         self.csv_dir = Path(SETTINGS['csv_dir'])
         self.rules_dir = Path(SETTINGS['rules_dir'])
         self.settings = SETTINGS
@@ -353,35 +355,40 @@ class Pipeline:
 
     def do_pipeline(self):
         #to_do = [f for f in self.data_dir.rglob("*{}".format(self.settings['extract']['ext']))]
-        to_do = self.settings['extract']['files']
+        if 'files' not in self.settings['extract']:
+            to_do = None
+        else:
+            to_do = self.settings['extract']['files']
 
         yield "Extracting"
         logging.getLogger("messages").info("PIPELINE: extraction started")
-        e = Extract(to_do, self.csv_dir, self.settings['extract']['fields'], 
-                    self.n, SETTINGS=self.project_settings, KEYS=self.all_keywords, MODE=self.MODE,
-                    FILE_EXT=self.settings['file_extract'])
-        csv_files = e.extract()
+        #e = Extract(to_do, self.csv_dir, self.settings['extract']['fields'], 
+        #            self.n, SETTINGS=self.project_settings, KEYS=self.all_keywords, MODE=self.MODE,
+        #            FILE_EXT=self.settings['file_extract'])
+        #csv_files = e.extract()
+        csv_files = [x for x in (self.csv_dir.parent / "24257").rglob("*.csv")]
 
-        yield "Retrieving Data"
-        complete, csv = self.get_data(csv_files)
+        for c in csv_files:
+            yield "Retrieving Data"
+            complete, csv = self.get_data([c])
 
-        tags_to_class = self.tags
+            tags_to_class = self.tags
 
-        for idx, t in enumerate(tags_to_class):
-            logging.getLogger("messages").info("PIPELINE: classifying tag {}/{} ({})".format(idx+1, len(tags_to_class), t))
-            #if self.classifiers[t]["preproc"] == True:
-            #    csv['trimmed'] = self.preproc(t, csv['text'])
-            #    csv[t] = self.do_class(t, csv['trimmed'])
-            #else:
-            yield "Classifying {}".format(t)
-            csv[t] = self.do_class(t, csv['text'])
+            for idx, t in enumerate(tags_to_class):
+                logging.getLogger("messages").info("PIPELINE: classifying tag {}/{} ({})".format(idx+1, len(tags_to_class), t))
+                #if self.classifiers[t]["preproc"] == True:
+                #    csv['trimmed'] = self.preproc(t, csv['text'])
+                #    csv[t] = self.do_class(t, csv['trimmed'])
+                #else:
+                yield "Classifying {}".format(t)
+                csv[t] = self.do_class(t, csv['text'])
 
-        if self.keep_text == False:
-            csv = csv.drop(columns=['text', 'trimmed'], axis=1, errors='ignore')
+            if self.keep_text == False:
+                csv = csv.drop(columns=['text', 'trimmed'], axis=1, errors='ignore')
 
-        yield "Storing"
-        self.merge_store(complete, csv)
+            yield "Storing"
+            self.merge_store(complete, csv)
 
-        del complete
-        del csv
+            del complete
+            del csv
         yield "Pipeline Complete."

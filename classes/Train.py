@@ -142,7 +142,7 @@ class Train:
         logging.getLogger("messages").info("TRAIN: extrapolation begun")
 
         path = Path(self.parent).rglob("*.csv")
-        files = [f for f in path]
+        files = [f for f in path if "full" not in f.as_posix()]
 
         all_data = []
         #with closing(mp.Pool(mp.cpu_count())) as pool:

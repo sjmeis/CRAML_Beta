@@ -133,10 +133,13 @@ def get_layout(arg, project):
                 filter_action="native"
     )
 
+    export = dbc.Button("Export", id="ngram-export")
+    ngram_download = dcc.Download(id="ngram-download")
+
     hidden = html.Div(id="ex-hidden-div", children=None, style={"display":"none"})
 
     layout = [add_modal, ex_dialog, html.H1("Context Exploration"), html.H3("Dive into the extracted text."), html.Hr(), 
-                drop_dir, drop_keys, chunk_switch, switch, number, run_button, add_button, ex_load, ex_slide, table, hidden]
+                drop_dir, drop_keys, chunk_switch, switch, number, run_button, add_button, ex_load, ex_slide, table, export, ngram_download, hidden]
 
     return layout
 
@@ -286,3 +289,22 @@ def update_slider_max(value, on, data):
         logging.getLogger("messages").info("Extracted word mode results selected - sentence exploration deactivated.")
         return max_val, {x:str(x) for x in range(1,max_val+1)}, True
       
+@app.callback(Output("ngram-download", "data"),
+                Input("ngram-export", "n_clicks"),
+                [State("ex-table", "data"),
+                State("key-drop", "value"),
+                State("ex-slider", "value")])
+def export_ngrams(n, data, key, x):
+    if n is None:
+        raise PreventUpdate
+
+    if data is None:
+        logging.getLogger("messages").error("No data to export!")
+        raise PreventUpdate
+
+    logging.getLogger("messages").info("Preparing ngrams for download.")
+    to_export = pd.DataFrame.from_records(data)
+    to_export = to_export[['chunk', 'count']]
+
+    name = "ngram_{}_{}.csv".format(key, x)
+    return dcc.send_data_frame(to_export.to_csv, name, index=False)

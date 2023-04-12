@@ -6,8 +6,14 @@ import random
 import shutil
 import os
 import pandas as pd
+import numpy as np
 import logging
 import platform
+import re
+from html import unescape
+from bs4 import BeautifulSoup
+
+from bson.objectid import ObjectId
 
 import dash
 from dash import dcc, no_update
@@ -18,9 +24,25 @@ from dash.exceptions import PreventUpdate
 import dash_daq as daq
 
 from server import app
-from .utility import get_settings
+from .utility import get_settings, get_mongo_client
 
 random.seed(42)
+
+def clean(text):
+    if '&' in text:
+        text = unescape(text.strip()) # remove html chars
+    if '<' in text:
+        text = BeautifulSoup(text, "lxml").text
+    text = re.sub(r"www\S+", " ", text)
+    text = re.sub(r"\b(?![ai])[a-zA-Z]\b", " ", text)
+    text = re.sub(r"\d+", " ", text)
+    text = " ".join(text.split()) # remove excess newlines
+    text = text.replace(',','') # remove commas for easier csv readability
+    text = text.replace(':','.').replace('*','.')
+    text = text.replace(' .', '.')
+    text = text.encode("ascii", "ignore").decode()
+
+    return text
 
 def sample_dir(dir, n, ext, project, SINGLE=False, SUBD=False, FILES=None, FIELDS=None):
     path = Path(project) / "sample"
@@ -64,9 +86,12 @@ def sample_dir(dir, n, ext, project, SINGLE=False, SUBD=False, FILES=None, FIELD
 def get_layout(project):
     settings = get_settings(project)
     init_val = None
+    init_dis = False
     if settings is not None:
         for k in settings:
-            if settings[k]['extract'] != "None":
+            if "db" in settings[k]:
+                init_dis = True
+            elif settings[k]['extract'] != "None":
                 init_val = settings[k]['parent']
                 break
 
@@ -85,6 +110,7 @@ def get_layout(project):
     direct = dbc.Input(id="sample-dir", 
                             placeholder="Input (relative or absolute) parent directory of text data files. Or hit Browse.",
                             value=init_val,
+                            disabled=init_dis,
                             debounce=True, 
                             type="text",
                             autocomplete=False,
@@ -95,7 +121,7 @@ def get_layout(project):
     dir_browse = html.Div([direct, browse])
 
     slider = html.Div([html.P("Sample Rate:"),
-                        dcc.Slider(id="sample-slider", min=0, max=100, step=5, value=10, 
+                        dcc.Slider(id="sample-slider", min=0, max=100, step=5, value=10, disabled=init_dis, 
                         marks={x:str(x) for x in range(0,101,5)})], 
                         style={"padding":"2rem"})
 
@@ -136,14 +162,58 @@ def sample(n, valid, dir, value, on, data):
         logging.getLogger("messages").error("Setup not performed. Do that first!")
         return " ", False
 
-    if on == False:
+    db = False
+    for x in settings:
+        if "db" in settings[x]:
+            db = True
+            db_name = settings[x]['db']
+            col_name = settings[x]['collection']
+            fields = settings[x]['fields']
+            extract = settings[x]['extract']
+
+    if on == False and db == False:
         for k in settings:
             if settings[k]['extract'] != "None" and Path(settings[k]["files"][0]).is_file() == False:
                 logging.getLogger("messages").error("Sample file is not located in the specified directory.")
                 return " ", False
 
     save_path = Path(data['project']) / "sample"
-    if valid == False:
+
+    if save_path.is_dir() == False:
+        os.makedirs(save_path.as_posix())
+
+    if db == True:
+        client = get_mongo_client()
+        collection = client[db_name].get_collection(col_name)
+
+        db_sample = min(250000, int(collection.estimated_document_count() * 0.01))
+        db_ids = collection.find({}, {"_id":1})
+        db_ids = [ObjectId(str(x['_id'])) for x in db_ids]
+        random_ids = random.sample(db_ids, db_sample)
+
+        project = {k:1 for k in fields}
+        project['_id'] = 0
+
+        logging.getLogger("messages").info("Sampling ~{} entries from {}/{}".format(db_sample, db_name, col_name))
+
+        sample = collection.find({"_id":{"$in":random_ids}}, project)
+
+        #total_entries = 0
+        #total_files = 0
+        db_list = [x for x in sample]
+        #for db_idx, temp in enumerate(np.array_split(db_list, math.ceil(len(db_list) / 1000000))):
+        sample_df = pd.DataFrame(db_list)
+        sample_df = sample_df.fillna("").astype(str)
+        sample_df[extract] = sample_df[extract].apply(lambda x: clean(x))
+        total_entries = len(sample_df.index)
+        sample_df.to_csv((save_path / "sample.csv").as_posix(), index=False)
+        #total_files += 1
+
+        message = "Sample file from MongoDB [{} row(s)] created - saved to {}".format(total_entries, (save_path / "sample.csv").as_posix())
+        logging.getLogger("messages").critical(message)
+    
+        return " ", False
+    elif valid == False:
         logging.getLogger("messages").error("Please fill in valid directory information.")
         return " ", False
     elif dir is None:
@@ -214,7 +284,7 @@ def guide_switch(on, data):
 
     file_extract = False
     for k in settings:
-        if settings[k]['extract'] != "None" and settings[k]['file_extract'] == True:
+        if "db" not in settings[k] and settings[k]['extract'] != "None" and settings[k]['file_extract'] == True:
             file_extract = True
 
     if file_extract == True:
