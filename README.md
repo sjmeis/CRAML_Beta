@@ -1,6 +1,7 @@
 # CRAML: Context Rule-Assisted Machine Learning #
 
-Welcome to CRAML Beta Version 0.4! 
+Welcome to CRAML Beta Version 0.5! 
+New in v0.5: embedding-assisted matching
 
 CRAML is a novel text classification and dataset creation framework that harmonizes expert domain-level knowledge with the power of Machine Learning, in order to create meaningful datasets from raw data.
 
@@ -128,12 +129,15 @@ On the **Rules** page, click `+` to add a new rule file, or `-` to delete one. N
 
 The example given above is obviously contrived and by no means complete. Good news - you can make each rule file as involved (or not) as you want. The rest of the CRAML process will guide you regarding this, and as always, you can come back and edit the rules.
 
+**NEW**: priority no longer required when using embeddings.
+
 ### Extract ###
 Now that you've created your tags and rules, it's time to test these out with your sample (training) data. This process will prepare the training datasets to be used for the training of your classifiers. Extraction will incorporate all of your current keywords and their corresponding rules. Here, you have three decisions to make:
 
 1. **Extract Sample** vs. **Full Dataset Extract (Full Extract)**: if your goal is to use a sample of your data to train a ML classifier, then choose to extract a sample. Assuming you have already navigated to the **Sample** page and prepared a data sample, this process will now perform an extraction on the sample. If instead you choose to do a Full Extract, the extraction process will be performed on the *entirety* of your original data. This can be helpful for producing a fully-ready, structured dataset that exactly captures your defined keywords and rules. The choice is yours.
 2. **Word** chunks vs. **sentence** chunks: for context windows, do we want to consider the n-number of word neighbors or sentence neighbors. As a general rule of thumb, contexts that are largely phrase-driven should use chunking, and contexts that potentially contain larger scopes (think bigger documents) should use sentence chunking. Or test both out!
-2. **N**: this is simply the number or word or sentence chunks to include to the left and right of your keywords. In the case of word chunks, N refers to the *maximum* context windows, and will be truncated at punctuation (on either side).
+3. **N**: this is simply the number or word or sentence chunks to include to the left and right of your keywords. In the case of word chunks, N refers to the *maximum* context windows, and will be truncated at punctuation (on either side).
+4. **String Matching** vs. **Embedding Matching**: now with v0.5, you can choose to using embedded (vectorized) versions of your rules rather than pure string matching, which helps to generalize your rules to unseen instances. With the choice of embeddings, a *threshold* must be defined, which represents the lower bound similarity threshold (scale of 0 to 1) that must be reached in order for rules to be matched.
 
 On the **Extract** page, you can keep track of your different extract jobs, which a uniquely identified. Remove jobs (and their output data) that you no longer need. Or click on the ids to proceed to the next step: text exploration.
 
